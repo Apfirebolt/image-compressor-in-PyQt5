@@ -42,9 +42,22 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def showImage(self):
         path_to_file, _ = QFileDialog.getOpenFileName(self, self.tr("Load Image"), self.tr("~/Desktop/"), self.tr("Images (*.jpg)"))
 
-        self.image_viewer = ImageViewer(path_to_file)
-        self.image_viewer.show()
-        
+        if path_to_file:
+            self.image_viewer = ImageViewer(path_to_file)
+            self.image_viewer.show()
+        else:
+            self.show_info_dialog()
+
+    
+    def show_info_dialog(self):
+        dlg = QDialog(self)
+        dlg.setWindowTitle("Info!")
+        dlg.layout = QVBoxLayout()
+        message = QLabel("Please select a file")
+        dlg.layout.addWidget(message)
+        dlg.setLayout(dlg.layout)
+        dlg.exec_()
+        return
 
 
 class ImageViewer(QWidget):
@@ -81,11 +94,13 @@ class ImageViewer(QWidget):
 
         self.load_image(image_path)
 
+
     def load_image(self, image_path):
         pixmap = QPixmap(image_path)
         self.scene.addPixmap(pixmap)
         self.view.fitInView(QRectF(0, 0, pixmap.width(), pixmap.height()), Qt.KeepAspectRatio)
         self.scene.update()
+            
 
     
     def compress_image(self):
