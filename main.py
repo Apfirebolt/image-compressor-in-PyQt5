@@ -1,4 +1,5 @@
 import sys
+import os
 from PySide2 import QtCore, QtGui, QtWidgets
 from PySide2.QtCore import QObject, QRectF, Qt
 from PySide2.QtWidgets import QMainWindow, QFileDialog, QWidget, QVBoxLayout, QGraphicsScene, QGraphicsView, \
@@ -14,6 +15,10 @@ class Ui_MainWindow(object):
         self.file_Select_Btn = QtWidgets.QPushButton(self.centralWidget)
         self.file_Select_Btn.setGeometry(QtCore.QRect(1082, 80, 121, 28))
         self.file_Select_Btn.setObjectName("file_Select_Btn")
+        self.folder_Select_Btn = QtWidgets.QPushButton(self.centralWidget)
+        self.folder_Select_Btn.setGeometry(QtCore.QRect(1082, 80, 121, 28))
+        self.folder_Select_Btn.setObjectName("folder_Select_Btn")
+        self.folder_Select_Btn.setText("Open Folder")
         self.headingLabel = QtWidgets.QLabel('Image Compressor Tool in Python')
         self.headingLabel.setAlignment(Qt.AlignCenter)
         self.headingLabel.setStyleSheet("text-align: center; font-size: 20px;")
@@ -22,6 +27,7 @@ class Ui_MainWindow(object):
         self.setMinimumSize(400, 300)
         self.gridLayout.addWidget(self.headingLabel)
         self.gridLayout.addWidget(self.file_Select_Btn)
+        self.gridLayout.addWidget(self.folder_Select_Btn)
         MainWindow.setCentralWidget(self.centralWidget)
 
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
@@ -35,6 +41,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # Initialize UI
         self.setupUi(self)
         self.file_Select_Btn.clicked.connect(self.showImage)
+        self.folder_Select_Btn.clicked.connect(self.openFolder)
 
     def tr(self, text):
         return QObject.tr(self, text)
@@ -47,6 +54,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.image_viewer.show()
         else:
             self.show_info_dialog()
+    
+    def openFolder(self):
+        folderpath = QtWidgets.QFileDialog.getExistingDirectory(self, 'Select Folder')
+
+        if folderpath:
+            self.image_viewer = FolderImageViewer(folderpath)
+            self.image_viewer.show()
+        else:
+            self.show_info_dialog()
+        
 
     
     def show_info_dialog(self):
@@ -105,7 +122,7 @@ class ImageViewer(QWidget):
     
     def compress_image(self):
 
-            # open the image
+        # open the image
         picture = Image.open(self.image_path)
         
         picture.save(self.fileName.text() + '.jpg', 
@@ -117,6 +134,71 @@ class ImageViewer(QWidget):
         dlg.setWindowTitle("Info!")
         dlg.layout = QVBoxLayout()
         message = QLabel("Image just compressed and saved")
+        dlg.layout.addWidget(message)
+        dlg.setLayout(dlg.layout)
+        dlg.exec_()
+        return
+
+
+class FolderImageViewer(QWidget):
+    def __init__(self, folderpath):
+        super().__init__()
+
+        self.scene = QGraphicsScene()
+        self.folderpath = folderpath
+        self.setWindowTitle("Image Compressor Python - Folder")
+        self.setMinimumSize(800, 600)
+        self.layout = QVBoxLayout()
+        self.file_Compress_Btn = QtWidgets.QPushButton()
+        self.file_Compress_Btn.setObjectName("file_Compress_Btn")
+        self.file_Compress_Btn.setText("Compress All Images")
+        self.file_Compress_Btn.setStyleSheet("color: #FFF; background-color: #427ef5; padding: 5px")
+        self.file_Compress_Btn.clicked.connect(self.compress_images)
+        self.selectQuality = QComboBox()
+        self.selectQuality.setStyleSheet("padding: 5px; background-color: #427ef5")
+        for i in range(10, 100, 10):
+	        self.selectQuality.addItem(str(i))
+
+        self.fileName = QLineEdit('Prefix')
+        self.fileName.setStyleSheet("padding: 5px")
+        self.bottomLayout = QHBoxLayout()
+        self.bottomLayout.addWidget(self.file_Compress_Btn, 1)
+        self.bottomLayout.addWidget(self.selectQuality, 1)
+        self.bottomLayout.addWidget(self.fileName, 1)
+
+        self.layout.addLayout(self.bottomLayout)
+
+        self.setLayout(self.layout)
+        self.load_image()
+
+
+    def load_image(self):
+
+        self.topLayout = QVBoxLayout()
+        for file in os.listdir(self.folderpath):
+            message = QLabel(file)
+            self.topLayout.addWidget(message)
+        self.layout.addLayout(self.topLayout)
+    
+    def compress_images(self):
+        count = 1
+        for file in os.listdir(self.folderpath):
+            filepath = os.path.join(self.folderpath, 
+                            file)
+            # open the image
+            picture = Image.open(filepath)
+            
+            picture.save(self.fileName.text() + str(count) + '.jpg', 
+                        "JPEG", 
+                        optimize = True, 
+                        quality = int(self.selectQuality.currentText()))
+        
+            count += 1
+        
+        dlg = QDialog(self)
+        dlg.setWindowTitle("Info!")
+        dlg.layout = QVBoxLayout()
+        message = QLabel("All Images just compressed and saved")
         dlg.layout.addWidget(message)
         dlg.setLayout(dlg.layout)
         dlg.exec_()
