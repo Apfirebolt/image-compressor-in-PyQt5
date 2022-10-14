@@ -25,5 +25,15 @@ pyinstaller main.py --windowed
 
 This would create a dist folder inside of which you'd find your exe file which you can use to run the application.
 
+## Screenshots
+
+![alt text](./screenshots/compressor-1.PNG)
+
+Home Menu screenshot, we can add a file or a folder and get started with image compression.
+
+![alt text](./screenshots/Compressor-2.PNG)
+
+Bottom menu allows you to choose quality and name for the compressed file.
+
 
 Read the [CONTRIBUTING.md](CONTRIBUTING.md) file.
